@@ -10,11 +10,12 @@
     <script type="text/javascript" src="js/stats.js"></script>
     <script type="text/javascript" src="js/simplex-noise.js"></script>
     <script type="text/javascript" src="js/physi.js"></script>
+    <script type="text/javascript" src="js/dat.gui.js"></script>
 
     <script type="text/javascript">
         'use strict';
 
-        Physijs.scripts.worker = 'physijs_worker.js';
+        Physijs.scripts.worker = 'js/physijs_worker.js';
         Physijs.scripts.ammo = 'ammo.js';
 
         var initScene,render;
@@ -61,8 +62,9 @@
                             if (input.power === true) {
                                 vehicle.applyEngineForce(300);
                             } else if (input.power === false) {
-                                vehicle.setBrake( 20, 2 );
-                                vehicle.setBrake( 20, 3 );
+                                //vehicle.setBrake( 20, 2 );
+                                //vehicle.setBrake( 20, 3 );
+                                vehicle.applyEngineForce(-300);
                             } else {
                                 vehicle.applyEngineForce(0);
                             }
@@ -138,20 +140,39 @@
             ground.receiveShadow = true;
             scene.add( ground );
 
-            for ( i = 0; i < 50; i++ ) {
-                var size = Math.random() * 2 + .5;
-                var box = new Physijs.BoxMesh(
-                        new THREE.CubeGeometry( size, size, size ),
-                        box_material
-                );
-                box.castShadow = box.receiveShadow = true;
-                box.position.set(
-                        Math.random() * 25 - 50,
-                        5,
-                        Math.random() * 25 - 50
-                );
-                scene.add( box )
-            }
+            var controls = new function () {
+                this.numOfCubes = 50;
+                var toRemove = [];
+
+                this.removeCube = function () {
+                    toRemove.forEach(function (e) {
+                        scene.remove(e);
+                    });
+                };
+
+                this.addCube = function () {
+                    for ( i = 0; i < controls.numOfCubes; i++ ) {
+                        var size = Math.random() * 2 + .5;
+                        var box = new Physijs.BoxMesh(
+                                new THREE.CubeGeometry( size, size, size ),
+                                box_material
+                        );
+                        box.castShadow = box.receiveShadow = true;
+                        box.position.set(
+                                Math.random() * 25 - 50,
+                                Math.random() * 25 + 5,
+                                Math.random() * 25 - 50
+                        );
+                        scene.add( box );
+                        toRemove.push(box);
+                    }
+                };
+            };
+            var gui = new dat.GUI();
+            gui.add(controls, 'numOfCubes', 0, 500);
+            gui.add(controls, 'addCube');
+            gui.add(controls, 'removeCube');
+            controls.addCube(); //默认至少执行一次
 
             //Model loader
             var loader = new THREE.JSONLoader();
